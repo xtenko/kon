@@ -1,0 +1,50 @@
+﻿// Ambil variabel dari environment Vercel
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const fileInput = document.getElementById("fileInput");
+const uploadBtn = document.getElementById("uploadBtn");
+const fileList = document.getElementById("fileList");
+
+// Upload file
+uploadBtn.addEventListener("click", async () => {
+  const file = fileInput.files[0];
+  if (!file) {
+    alert("Pilih file terlebih dahulu!");
+    return;
+  }
+
+  const { data, error } = await supabase.storage
+    .from("uploads") // Ganti sesuai nama bucket
+    .upload(file.name, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (error) {
+    alert("Gagal upload: " + error.message);
+  } else {
+    alert("Upload berhasil!");
+    loadFiles();
+  }
+});
+
+// Load daftar file
+async function loadFiles() {
+  const { data, error } = await supabase.storage
+    .from("uploads") // Ganti sesuai nama bucket
+    .list();
+
+  fileList.innerHTML = "";
+  if (data) {
+    data.forEach(file => {
+      const li = document.createElement("li");
+      li.textContent = file.name;
+      fileList.appendChild(li);
+    });
+  }
+}
+
+loadFiles();
